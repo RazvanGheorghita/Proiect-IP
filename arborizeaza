@@ -1,0 +1,645 @@
+#include <iostream>
+#include <cstring>
+#include <winbgim.h>
+#include <graphics.h>
+#include <stdlib.h>
+#include <time.h>
+using namespace std;
+
+struct nodarb {
+    unsigned char info;
+    struct nodarb* st; struct nodarb* dr;
+};
+typedef nodarb* arbore;
+int esteArboreNul(arbore a)
+{
+    if (a == NULL)
+        return 1;
+    else
+        return 0;
+}
+void initArbore(arbore& a)
+{
+    if (!esteArboreNul(a)) a = NULL;
+}
+void parcurgereInordine(arbore a)
+{
+    if (!esteArboreNul(a))
+    {
+        parcurgereInordine(a->st);
+        cout << a->info;
+        parcurgereInordine(a->dr);
+    }
+}
+bool adaugaLaArboreElement(arbore& a, unsigned char el) {
+    if (esteArboreNul(a)) {
+        a = new nodarb;
+        if (!a) return false;
+        a->info = el; a->st = NULL; a->dr = NULL;
+        return true;
+    }
+    else if (el < a->info)
+        return adaugaLaArboreElement(a->st, el);
+    else
+        return adaugaLaArboreElement(a->dr, el);
+}
+
+//Derivare
+void derivare(arbore ai, arbore& ad)
+{
+    arbore a, b, c, d, e, f, g;
+    ad = new nodarb;
+    ad->info = ' ';
+    ad->st = NULL;
+    ad->dr = NULL;
+    switch (ai->info)
+    {
+    case '0':
+    case '1':
+    case '2':
+    case '3':
+    case '4':
+    case '5':
+    case '6':
+    case '7':
+    case '8':
+    case '9':
+    {
+        ad->info = '0';
+        break;
+    }
+    case 'x':
+    {
+        ad->info = '1';
+        break;
+    }
+    case '+':
+    {
+        derivare(ai->st, a);
+        ad->st = a;
+        derivare(ai->dr, b);
+        ad->dr = b;
+        ad->info = '+';
+        break;
+    }
+    case '-':
+    {
+        derivare(ai->st, a);
+        ad->st = a;
+        derivare(ai->dr, b);
+        ad->dr = b;
+        ad->info = '-';
+        break;
+    }
+    case '*':
+    {
+        a = new nodarb;
+        b = new nodarb;
+        derivare(ai->st, c);
+        derivare(ai->dr, d);
+        ad->info = '+';
+        a->info = '*';
+        a->st = c;
+        a->dr = ai->dr;
+        b->info = '*';
+        b->st = ai->st;
+        b->dr = d;
+        ad->st = a;
+        ad->dr = b;
+        break;
+    }
+    case '/':
+    {
+        a = new nodarb;
+        b = new nodarb;
+        c = new nodarb;
+        derivare(ai->st, d);
+        derivare(ai->dr, e);
+        a->info = '*';
+        a->st = d;
+        a->dr = ai->dr;
+        b->info = '*';
+        b->st = ai->st;
+        b->dr = e;
+        c->info = '-';
+        c->st = a;
+        c->dr = b;
+        f = new nodarb;
+        g = new nodarb;
+        f->info = '2';
+        f->st = NULL;
+        f->dr = NULL;
+        g->info = '^';
+        g->st = ai->dr;
+        g->dr = f;
+        ad->info = '/';
+        ad->st = c;
+        ad->dr = g;
+        break;
+    }
+    case '^':
+    {
+        derivare(ai->st, a);
+        b = new nodarb;
+        c = new nodarb;
+        b->info = '1';
+        b->st = NULL;
+        b->dr = NULL;
+        c->info = '-';
+        c->st = ai->dr;
+        c->dr = b;
+        d = new nodarb;
+        d->info = '^';
+        d->st = ai->st;
+        d->dr = c;
+        e = new nodarb;
+        e->info = '*';
+        e->st = ai->dr;
+        e->dr = d;
+        ad->info = '*';
+        ad->st = e;
+        ad->dr = a;
+        break;
+    }
+    case 'e':
+    {
+        a = new nodarb;
+        a->info = ai->info;
+        a->st = ai->st;
+        a->dr = ai->dr;
+        derivare(ai->st, b);
+        ad->info = '*';
+        ad->st = a;
+        ad->dr = b;
+        break;
+    }
+    case 'l':
+    {
+        derivare(ai->st, a);
+        ad->info = '/';
+        ad->st = a;
+        ad->dr = ai->st;
+        break;
+    }
+    case 's':
+    {
+        a = new nodarb;
+        a->info = 'c';
+        a->st = ai->st;
+        a->dr = NULL;
+        derivare(ai->st, b);
+        ad->info = '*';
+        ad->st = a;
+        ad->dr = b;
+    }
+    case 'c':
+    {
+        derivare(ai->st, a);
+        b = new nodarb;
+        c = new nodarb;
+        d = new nodarb;
+        b->info = '0';
+        b->st = NULL;
+        b->dr = NULL;
+        c->info = 's';
+        c->st = ai->st;
+        c->dr = NULL;
+        d->info = '*';
+        d->st = c;
+        d->dr = a;
+        ad->info = '-';
+        ad->st = b;
+        ad->dr = d;
+        break;
+    }
+    };
+}
+//Vectorizare
+const int lmax = 6;
+const int vmax = 50;
+typedef string expresie;
+struct Vectori
+{
+    string info[50];
+    int nr;
+}vec;
+char expr[1000];
+void test(char expr[], Vectori& vec)
+{
+    int i = 0;
+    vec.nr = 0;
+    while (i < strlen(expr))
+    {
+        vec.info[i] = vec.info[i] + expr[i];
+        cout << vec.info[i] << " ";
+        i++;
+        vec.nr++;
+    }
+}
+void Vectorizare(char expr[], Vectori& vec)
+{
+    unsigned int i, j;
+    i = 0;
+    j = 0;
+    while (i < strlen(expr))
+    {
+        if ((expr[i] == 's') || (expr[i] == 'c') || (expr[i] == 'e') || (expr[i] == 'l'))
+        {
+            if (expr[i] != 'l')
+            {
+                vec.info[j] = vec.info[j] + expr[i] + expr[i + 1] + expr[i + 2];
+                j++;
+                i = i + 3;
+            }
+            else
+            {
+                vec.info[j] = vec.info[j] + expr[i] + expr[i + 1];
+                j++;
+                i = i + 2;
+            }
+        }
+        else
+        {
+            if ((expr[i] == '(') || (expr[i] == ')') || (expr[i] == '+') || (expr[i] == '-') || (expr[i] == '*') || (expr[i] == '/' || (expr[i] == '^') || (expr[i] == 'x')))
+            {
+                vec.info[j] = vec.info[j] + expr[i];
+                j++;
+                i++;
+            }
+            else
+            {
+                while ((expr[i] == '0') || (expr[i] == '1') || (expr[i] == '2') || (expr[i] == '3') || (expr[i] == '4') || (expr[i] == '5') || (expr[i] == '6') || (expr[i] == '7') || (expr[i] == '8') || (expr[i] == '9'))
+                {
+                    vec.info[j] = vec.info[j] + expr[i];
+                    i++;
+                }
+                j++;
+            }
+        }
+    }
+    vec.nr = j;
+}
+
+//Simplificare
+void Simplificare(arbore arbi, arbore& arbs)
+{
+    arbore numar;
+    numar = new nodarb;
+    numar->info = 'n';
+    numar->st = NULL;
+    numar->dr = NULL;
+    arbs = new nodarb;
+    arbs->st = NULL;
+    arbs->dr = NULL;
+    switch (arbi->info)
+    {
+    case '0':
+    case '1':
+    case '2':
+    case '3':
+    case '4':
+    case '5':
+    case '6':
+    case '7':
+    case '8':
+    case '9':
+    case 'x':
+    {
+        arbs = arbi;
+        break;
+    }
+    case '+':
+    {
+        if ((arbi->st->info == '0') || (arbi->st == NULL))
+        {
+            arbs = arbi->dr;
+        }
+        else
+            if ((arbi->dr->info == '0') || (arbi->dr == NULL))
+            {
+                arbs = arbi->st;
+            }
+            else
+                if (arbi->st->info == arbi->dr->info)
+                {
+                    numar->info = '2';
+                    arbs->info = '*';
+                    arbs->st = numar;
+                    arbs->dr = arbi->dr;
+                }
+                else
+                    arbs = arbi;
+        break;
+    }
+    case '-':
+    {
+        if ((arbi->st->info == '0') || (arbi->st == NULL))
+        {
+            arbs = arbi->dr;
+        }
+        else
+            if ((arbi->dr->info == '0') || (arbi->dr == NULL))
+            {
+                arbs = arbi->st;
+            }
+            else
+                if (arbi->st->info == arbi->dr->info)
+                {
+                    numar->info = '0';
+                    arbs->info = '*';
+                    arbs->st = numar;
+                    arbs->dr = arbi->dr;
+                }
+        arbs = arbi;
+        break;
+    }
+    case '*':
+    {
+        if ((arbi->st->info == '0') || (arbi->dr->info == '0'))
+        {
+            numar->info = '0';
+            arbs = numar;
+        }
+        else
+            if (arbi->st->info == '1')
+            {
+                arbs = arbi->dr;
+            }
+            else
+                if (arbi->dr->info == '1')
+                {
+                    arbs = arbi->st;
+                }
+                else
+                    if (arbi->st->info == arbi->dr->info)
+                    {
+                        numar->info = '2';
+                        arbs->info = '^';
+                        arbs->dr = numar;
+                        arbs->st = arbi->st;
+                    }
+        arbs = arbi;
+        break;
+    }
+    case '/':
+    {
+        if (arbi->dr->info == '1')
+        {
+            arbs = arbi->st;
+        }
+        else
+            if (arbi->dr->info == '0')
+            {
+                numar->info = '!';
+                arbs = numar;
+            }
+            else
+                if (arbi->st->info == arbi->dr->info)
+                {
+                    numar->info = '1';
+                    arbs = numar;
+                }
+                else
+                    arbs = arbi;
+        break;
+    }
+    case '^':
+    {
+        if (arbi->dr->info == '0')
+        {
+            numar->info = '1';
+            arbs = numar;
+        }
+        else
+            if (arbi->dr->info == '1')
+            {
+                arbs = arbi->st;
+            }
+            else
+                arbs = arbi;
+        break;
+    }
+    case 'l':
+    {
+        if (arbi->st->info == '1')
+        {
+            numar->info = '0';
+            arbs = numar;
+        }
+        else
+            if (arbi->st->info == 'e')
+            {
+                numar->info = '1';
+                arbs = numar;
+            }
+            else
+                arbs = arbi;
+        break;
+    }
+    case 's':
+    {
+        if (arbi->st->info == '0')
+        {
+            numar->info = '0';
+            arbs = numar;
+        }
+        else
+            if ((arbi->st->info == '/') && (arbi->st->st->info = 'p'))
+            {
+                if (arbi->st->dr->info == '6')
+                {
+                    numar->info = '/';
+                    adaugaLaArboreElement(numar->st, '1');
+                    adaugaLaArboreElement(numar->dr, '2');
+                    arbs = numar;
+                }
+                else
+                    if (arbi->st->dr->info == '4')
+                    {
+                        numar->info = '/';
+                        adaugaLaArboreElement(numar->st, 'r');
+                        adaugaLaArboreElement(numar->st->st, '2');
+                        adaugaLaArboreElement(numar->dr, '2');
+                        arbs = numar;
+                    }
+                    else
+                        if (arbi->st->dr->info == '3')
+                        {
+                            numar->info = '/';
+                            adaugaLaArboreElement(numar->st, 'r');
+                            adaugaLaArboreElement(numar->st->st, '3');
+                            adaugaLaArboreElement(numar->dr, '2');
+                            arbs = numar;
+                        }
+                        else
+                            if (arbi->st->dr->info == '2')
+                            {
+                                numar->info = '1';
+                                arbs = numar;
+                            }
+            }
+
+        break;
+    }
+    default:    arbs = arbi; break;
+    }
+}
+
+int Prioritate1(char op)
+{
+    if (op == '(' || op == ')') return 0;
+    if (op == '+' || op == '-') return 1;
+    if (op == '*' || op == '/') return 2;
+    if (op == '^') return 3;
+    if (op == 's' || op == 'c' || op == 'l' || op == 'e') return 4;
+}
+
+struct arstr
+{
+    char s[25];
+};
+
+struct ararb
+{
+    arbore a;
+};
+void arborizeaza()
+{
+    int i, top1, top2;
+    i = top1 = 0;
+    top2 = 1;
+    arstr operator1[25];
+    ararb operand[25];
+    arbore arb;
+    while (i <= vec.nr && top2 > 0)
+    {
+        i++;
+        if (strchr("1234567890x", vec.info[i][1]))
+        {
+            top1++;
+            arb = new nodarb;
+            arb->info = vec.info;
+            arb->st = NULL;
+            arb->dr = NULL;
+            operand[top1].a = arb;
+        }
+        else if (vec.info[i][1] == '(')
+        {
+            top2++;
+            operator1[top2].s[0] = '(';
+        }
+        else
+        {
+            while (top2 > 0 && !(operator1[top2].s[1] == '(' || operator1[top2].s[1] == ')') && (Prioritate1(operator1[top2].s[1]) >= Prioritate1(vec.info[i][1])))
+            {
+                if (strchr("lcse", operator1[top2].s[1]))
+                {
+                    arb = new nodarb;
+                    arb->info = operator1[top2].s;
+                    arb->st = operand[top1].a;
+                    arb->dr = NULL;
+                    operand[top1].a = arb;
+                }
+                else
+                {
+                    arb = new nodarb;
+                    arb->info = operator1[top2].s;
+                    arb->st = operand[top1 - 1].a;
+                    arb->dr = operand[top1].a;
+                    operand[top1 - 1].a = arb;
+                    top1--;
+                }
+                top2--;
+            }
+            if (top2 > 0)
+                if (operator1[top2].s != '(' || (vec.info[i][1] != ')'))
+                {
+                    top2++;
+                    operand[top2].a = vec.info[i];
+                }
+                else top2--;
+        }
+        if (i == vec.nr && top2 == 0)
+        {
+            arb = new nodarb;
+            arb = operand[1].a;
+        }
+        else
+        {
+            arb = new nodarb;
+            arb->info = 0;
+            arb->st = NULL;
+            arb->dr = NULL;
+        }
+    }
+}
+
+void tipareste(arbore arb,int nivel,int x0)
+{
+    int dy = 30;
+    int i, dx;
+    dx = getmaxx();
+    for (int i = 1; i <= nivel; dx /= 2)
+        if (arb == NULL) outtextxy(x0+dx, nivel*dy, #207);
+        else
+        {
+            outtextxy(x0 + dx, nivel * dy, arb->info);
+            line(x0 + dx, nivel * dy + 5, x0 + dx / 2, (nivel + 1) * dy - 5);
+            line(x0 + dx, nivel * dy + 5, x0 + dx + dx / 2, (nivel + 1) * dy - 5);
+            tipareste(arb->st, nivel + 1, x0);
+            tipareste(arb->dr, nivel + 1, x0 + dx);
+        }
+}
+
+void formaPolonezaInversa(arbore arb, char expr[])
+{
+    char expr1[50], expr2[50];
+    expr[0] = NULL;
+    if (arb != NULL)
+    {
+        formaPolonezaInversa(arb->st, expr1);
+        formaPolonezaInversa(arb->dr, expr2);
+        strcat(expr, expr1);
+        strcat(expr, " ");
+        strcat(expr, expr2);
+        strcat(expr, " ");
+        char c[1];
+        c[0] = arb->info;
+        strcat(expr, c);
+    }
+
+}
+
+int main()
+{
+    arbore arb, arbs, arbs2;
+    initArbore(arb);
+    initArbore(arbs);
+    initArbore(arbs2);
+    adaugaLaArboreElement(arb, 's');
+    adaugaLaArboreElement(arb->st, '/');
+    adaugaLaArboreElement(arb->st->st, 'p');
+    //adaugaLaArboreElement(arb->st->st->st,'x');
+    //adaugaLaArboreElement(arb->st->st->dr,'0');
+    adaugaLaArboreElement(arb->st->dr, '2');
+    // adaugaLaArboreElement(arb->st->dr->st,'x');
+    // adaugaLaArboreElement(arb->st->dr->dr,'0');*/
+     // adaugaLaArboreElement(arb->dr,'1');
+     /*adaugaLaArboreElement(arb->dr->st,'+');
+     adaugaLaArboreElement(arb->dr->st->st,'x');
+     adaugaLaArboreElement(arb->dr->st->dr,'0');
+     adaugaLaArboreElement(arb->dr->dr,'+');
+     adaugaLaArboreElement(arb->dr->dr->st,'x');
+     adaugaLaArboreElement(arb->dr->dr->dr,'0');*/
+    cout << "Functia data este: ";
+    parcurgereInordine(arb);
+    cout << endl;
+    Simplificare(arb, arbs);
+    cout << "Functia simplifacata x1: ";
+    parcurgereInordine(arbs);
+    cout << endl;
+    Simplificare(arbs, arbs2);
+    cout << "Functia simplificata x2: ";
+    parcurgereInordine(arbs2);
+    return 0;
+}
